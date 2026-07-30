@@ -1,0 +1,19 @@
+services:
+  zinger:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: zinger-launcher
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - OPENBID_PATH=/tmp/openbid
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - SITE_URL=${SITE_URL:-http://localhost:3000}
+    volumes:
+      - zinger_data:/app/data
+
+volumes:
+  zinger_data:

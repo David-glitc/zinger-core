@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zinger · Token Launcher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080a0f;
+      --surface: #111318;
+      --border: #1f2230;
+      --text: #e8eaed;
+      --text2: #8b8fa3;
+      --accent: #6c5ce7;
+      --accent2: #a29bfe;
+      --green: #00d2a0;
+      --red: #ff6b6b;
+      --orange: #ffa502;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    html { font-size: 15px; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 20px; }
+
+    /* Header */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.03em; }
+    .logo span { color: var(--accent); }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 100px; font-size: 0.7rem; font-weight: 600;
+    }
+    .badge-green { background: rgba(0,210,160,0.12); color: var(--green); }
+    .badge-red { background: rgba(255,107,107,0.12); color: var(--red); }
+
+    /* Address bar */
+    .addr-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .addr-bar .label { color: var(--text2); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .addr-bar .address { font-family: monospace; font-size: 0.85rem; color: var(--accent2); word-break: break-all; }
+    .addr-bar .balance { margin-left: auto; font-weight: 700; font-size: 1.1rem; color: var(--green); }
+
+    /* Grid */
+    .grid { display: grid; gap: 20px; }
+
+    /* Card */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+    }
+    .card h2 {
+      font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--text2); margin-bottom: 16px;
+    }
+
+    /* Form */
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block; font-size: 0.75rem; font-weight: 600;
+      color: var(--text2); margin-bottom: 4px;
+    }
+    .form-group input, .form-group textarea {
+      width: 100%; padding: 10px 12px;
+      background: #0d0f16; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text); font-size: 0.85rem;
+      font-family: inherit; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+    /* Button */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 20px; border: none; border-radius: var(--radius-sm);
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent2); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-block { width: 100%; }
+    .btn-sm { padding: 6px 12px; font-size: 0.75rem; }
+
+    /* AI generated suggestion */
+    .ai-card {
+      background: rgba(108,92,231,0.06); border: 1px solid rgba(108,92,231,0.2);
+      border-radius: var(--radius-sm); padding: 14px; margin-top: 12px;
+    }
+    .ai-card .field { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.8rem; }
+    .ai-card .field .key { color: var(--text2); }
+    .ai-card .field .val { font-weight: 600; color: var(--accent2); }
+    .ai-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.65rem; color: var(--accent2); margin-bottom: 8px;
+    }
+
+    /* Result */
+    .result {
+      padding: 14px; border-radius: var(--radius-sm); margin-top: 12px;
+      font-size: 0.8rem; word-break: break-all;
+    }
+    .result.success { background: rgba(0,210,160,0.08); border: 1px solid rgba(0,210,160,0.2); }
+    .result.error { background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.2); }
+    .result a { color: var(--accent2); }
+
+    /* Fee breakdown */
+    .fee-bar {
+      display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 8px 0 12px;
+    }
+    .fee-bar .seg { transition: width 0.3s; }
+    .fee-dev { background: var(--accent); }
+    .fee-liq { background: var(--green); }
+    .fee-buyback { background: var(--orange); }
+    .fee-reward { background: var(--accent2); }
+    .fee-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.7rem; }
+    .fee-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+
+    /* Session table */
+    .session-table { width: 100%; font-size: 0.78rem; }
+    .session-table th {
+      text-align: left; padding: 8px 6px; color: var(--text2);
+      font-weight: 600; font-size: 0.65rem; text-transform: uppercase;
+      letter-spacing: 0.05em; border-bottom: 1px solid var(--border);
+    }
+    .session-table td { padding: 8px 6px; border-bottom: 1px solid rgba(31,34,48,0.5); }
+    .session-table tr:last-child td { border: none; }
+    .session-table a { color: var(--accent2); text-decoration: none; }
+    .session-table a:hover { text-decoration: underline; }
+    .empty-state { color: var(--text2); font-size: 0.8rem; text-align: center; padding: 24px; }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Gradient orbs */
+    .orb {
+      position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: -1;
+    }
+    .orb-1 { width: 500px; height: 500px; background: rgba(108,92,231,0.08); top: -200px; right: -200px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(0,210,160,0.05); bottom: -150px; left: -150px; }
+
+    @media (max-width: 600px) {
+      .container { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="container">
+    <header>
+      <div class="logo"><span>Zinger</span> · launcher</div>
+      <span id="netBadge" class="badge badge-green">⟳ loading</span>
+    </header>
+
+    <div class="addr-bar" id="addrBar">
+      <span class="label">Dev Wallet</span>
+      <span class="address" id="devAddr">—</span>
+      <span class="balance" id="devBalance">— ETH</span>
+    </div>
+
+    <div class="grid">
+      <!-- Prompt -->
+      <div class="card">
+        <h2>⤵ Idea → Token</h2>
+        <div class="form-group">
+          <label for="prompt">Describe your token idea</label>
+          <textarea id="prompt" placeholder="e.g. a cat coin for robinhood traders with staking rewards..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-block" id="genBtn" onclick="generate()">✨ Generate Token Data</button>
+        <div id="aiOutput"></div>
+      </div>
+
+      <!-- Launch -->
+      <div class="card">
+        <h2>⚡ Launch Config</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tName">Name</label>
+            <input id="tName" placeholder="Token name">
+          </div>
+          <div class="form-group">
+            <label for="tSymbol">Symbol</label>
+            <input id="tSymbol" placeholder="TOKEN" maxlength="8" style="text-transform:uppercase">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="tDesc">Description</label>
+          <textarea id="tDesc" placeholder="Token description"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tSupply">Total Supply</label>
+            <input id="tSupply" type="number" placeholder="1000000">
+          </div>
+          <div class="form-group">
+            <label for="tMcap">Market Cap ($)</label>
+            <input id="tMcap" type="number" placeholder="3000" min="1000" max="10000">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tBuyAmt">Initial Buy (ETH)</label>
+            <input id="tBuyAmt" type="number" step="0.001" placeholder="0.005">
+          </div>
+          <div class="form-group">
+            <label for="tFee">Fee Tier (%)</label>
+            <input id="tFee" type="number" placeholder="5" min="3" max="10">
+          </div>
+        </div>
+
+        <!-- Fee breakdown bar -->
+        <div style="margin-top:4px">
+          <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text2);margin-bottom:4px">
+            <span>Fee Split</span>
+            <span id="feeTotalLabel">5% total</span>
+          </div>
+          <div class="fee-bar">
+            <div class="seg fee-dev" id="feeDevSeg" style="width:80%"></div>
+            <div class="seg fee-liq" id="feeLiqSeg" style="width:8%"></div>
+            <div class="seg fee-buyback" id="feeBbSeg" style="width:7%"></div>
+            <div class="seg fee-reward" id="feeRewSeg" style="width:5%"></div>
+          </div>
+          <div class="fee-legend">
+            <span><span class="dot fee-dev"></span>Dev <span id="feeDevPct">80%</span></span>
+            <span><span class="dot fee-liq"></span>Liq <span id="feeLiqPct">—</span></span>
+            <span><span class="dot fee-buyback"></span>BB <span id="feeBbPct">—</span></span>
+            <span><span class="dot fee-reward"></span>Rew <span id="feeRewPct">—</span></span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="launchBtn" onclick="launchToken()" style="margin-top:14px">
+          🚀 Launch Token
+        </button>
+        <div id="launchResult"></div>
+      </div>
+
+      <!-- Sessions -->
+      <div class="card">
+        <h2>📋 Sessions</h2>
+        <div id="sessionList"><div class="empty-state">No sessions yet</div></div>
+      </div>
+    </div>
+
+    <footer style="text-align:center;padding:24px 0;color:var(--text2);font-size:0.7rem">
+      Legacy token launcher · experimental
+    </footer>
+  </div>
+
+  <script>
+    let generated = {};
+
+    // --- Fee calculator ---
+    function calcFees(feeTier) {
+      const fee = Math.max(3, Math.min(10, Number(feeTier) || 5));
+      const dev = fee * 0.8;
+      const rest = fee - dev;
+      const liq = Math.round(rest * 0.5 * 10) / 10;
+      const bb = Math.round((rest - liq) * 0.6 * 10) / 10;
+      const rew = Math.round((rest - liq - bb) * 10) / 10;
+      return { dev, liq, bb, rew, total: fee };
+    }
+
+    function updateFeeBar() {
+      const feeTier = document.getElementById('tFee').value || 5;
+      const f = calcFees(feeTier);
+      document.getElementById('feeTotalLabel').textContent = f.total.toFixed(1) + '% total';
+      document.getElementById('feeDevSeg').style.width = ((f.dev / f.total) * 100).toFixed(0) + '%';
+      document.getElementById('feeLiqSeg').style.width = ((f.liq / f.total) * 100).toFixed(0) + '%';
+      document.getElementById('feeBbSeg').style.width = ((f.bb / f.total) * 100).toFixed(0) + '%';
+      document.getElementById('feeRewSeg').style.width = ((f.rew / f.total) * 100).toFixed(0) + '%';
+      document.getElementById('feeDevPct').textContent = f.dev.toFixed(1) + '%';
+      document.getElementById('feeLiqPct').textContent = f.liq.toFixed(1) + '%';
+      document.getElementById('feeBbPct').textContent = f.bb.toFixed(1) + '%';
+      document.getElementById('feeRewPct').textContent = f.rew.toFixed(1) + '%';
+    }
+
+    document.getElementById('tFee').addEventListener('input', updateFeeBar);
+    document.getElementById('tFee').addEventListener('change', updateFeeBar);
+
+    // --- Status ---
+    async function loadStatus() {
+      try {
+        const r = await fetch('/api/status');
+        const d = await r.json();
+        document.getElementById('devAddr').textContent = d.address;
+        document.getElementById('devBalance').textContent = parseFloat(d.balance).toFixed(6) + ' ETH';
+        document.getElementById('netBadge').textContent = '● mainnet · ' + d.chain;
+        document.getElementById('netBadge').className = 'badge badge-green';
+      } catch {
+        document.getElementById('netBadge').textContent = '● offline';
+        document.getElementById('netBadge').className = 'badge badge-red';
+      }
+    }
+
+    // --- AI Generate ---
+    async function generate() {
+      const prompt = document.getElementById('prompt').value.trim();
+      if (!prompt) { document.getElementById('prompt').focus(); return; }
+
+      const btn = document.getElementById('genBtn');
+      const out = document.getElementById('aiOutput');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Generating...';
+      out.innerHTML = '';
+
+      try {
+        const r = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        });
+        const d = await r.json();
+        if (d.error) { throw new Error(d.error); }
+
+        generated = d;
+        document.getElementById('tName').value = d.name;
+        document.getElementById('tSymbol').value = d.symbol;
+        document.getElementById('tDesc').value = d.description;
+        document.getElementById('tSupply').value = d.totalSupply;
+        document.getElementById('tMcap').value = d.marketCap;
+        document.getElementById('tBuyAmt').value = d.initialBuyAmount;
+        document.getElementById('tFee').value = d.suggestedFeeTier;
+        updateFeeBar();
+
+        out.innerHTML = `<div class="ai-card">
+          <div class="ai-tag">✦ generated by ${d.model || 'AI'}</div>
+          <div class="field"><span class="key">Name</span><span class="val">${d.name}</span></div>
+          <div class="field"><span class="key">Symbol</span><span class="val">${d.symbol}</span></div>
+          <div class="field"><span class="key">Supply</span><span class="val">${d.totalSupply.toLocaleString()}</span></div>
+          <div class="field"><span class="key">Market Cap</span><span class="val">$${d.marketCap.toLocaleString()}</span></div>
+          <div class="field"><span class="key">Fee Tier</span><span class="val">${d.suggestedFeeTier}%</span></div>
+          <div class="field"><span class="key">Initial Buy</span><span class="val">${d.initialBuyAmount} ETH</span></div>
+        </div>`;
+      } catch (err) {
+        out.innerHTML = `<div class="result error">${err.message}</div>`;
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '✨ Generate Token Data';
+    }
+
+    // --- Launch ---
+    async function launchToken() {
+      const payload = {
+        name: document.getElementById('tName').value.trim(),
+        symbol: document.getElementById('tSymbol').value.trim().toUpperCase(),
+        description: document.getElementById('tDesc').value.trim(),
+        totalSupply: Number(document.getElementById('tSupply').value),
+        marketCap: Number(document.getElementById('tMcap').value),
+        initialBuyAmount: Number(document.getElementById('tBuyAmt').value || 0),
+        feeTier: Number(document.getElementById('tFee').value || 5),
+      };
+
+      if (!payload.name || !payload.symbol || !payload.totalSupply || !payload.marketCap) {
+        document.getElementById('launchResult').innerHTML =
+          '<div class="result error">Fill in Name, Symbol, Supply, and Market Cap</div>';
+        return;
+      }
+
+      const btn = document.getElementById('launchBtn');
+      const out = document.getElementById('launchResult');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Launching...';
+      out.innerHTML = '';
+
+      try {
+        const r = await fetch('/api/launch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const d = await r.json();
+
+        if (!d.success) {
+          throw new Error(d.error || 'Launch failed');
+        }
+
+        out.innerHTML = `<div class="result success">
+          <div style="font-weight:700;margin-bottom:4px">✓ ${d.symbol} Launched</div>
+          <div>Token: <a href="https://robinhoodchain.blockscout.com/address/${d.tokenAddress}" target="_blank">${d.tokenAddress}</a></div>
+          <div>TX: <a href="https://robinhoodchain.blockscout.com/tx/${d.txHash}" target="_blank">${d.txHash}</a></div>
+          <div>Fee: ${d.feeTier}% · MCap: $${d.marketCap.toLocaleString()} · Supply: ${d.totalSupply.toLocaleString()}</div>
+          <div style="margin-top:4px;color:var(--text2);font-size:0.7rem">
+            Dev 80% · Liq ${d.feeBreakdown?.liquidity || 0}% · BB ${d.feeBreakdown?.buyback || 0}% · Rew ${d.feeBreakdown?.reward || 0}%
+          </div>
+        </div>`;
+
+        loadSessions();
+        loadStatus();
+
+        // Clear fields
+        document.getElementById('prompt').value = '';
+        document.getElementById('aiOutput').innerHTML = '';
+
+      } catch (err) {
+        out.innerHTML = `<div class="result error">✗ ${err.message.substring(0, 500)}</div>`;
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '🚀 Launch Token';
+    }
+
+    // --- Sessions ---
+    async function loadSessions() {
+      try {
+        const r = await fetch('/api/sessions');
+        const sessions = await r.json();
+        const el = document.getElementById('sessionList');
+
+        if (sessions.length === 0) {
+          el.innerHTML = '<div class="empty-state">No sessions yet</div>';
+          return;
+        }
+
+        el.innerHTML = `<table class="session-table">
+          <thead><tr>
+            <th>Token</th>
+            <th>Fee</th>
+            <th>MCap</th>
+            <th>Address</th>
+            <th>Time</th>
+          </tr></thead>
+          <tbody>${sessions.map(s => `<tr>
+            <td><strong>${s.symbol}</strong></td>
+            <td>${s.feeTier}%</td>
+            <td>$${(s.marketCap || 0).toLocaleString()}</td>
+            <td>${s.tokenAddress ? `<a href="https://robinhoodchain.blockscout.com/address/${s.tokenAddress}" target="_blank">${s.tokenAddress.substring(0,10)}…</a>` : '—'}</td>
+            <td style="color:var(--text2);font-size:0.7rem">${new Date(s.timestamp).toLocaleTimeString()}</td>
+          </tr>`).join('')}</tbody>
+        </table>`;
+      } catch {}
+    }
+
+    // --- Init ---
+    loadStatus();
+    loadSessions();
+    updateFeeBar();
+    setInterval(loadStatus, 15000);
+  </script>
+</body>
+</html>

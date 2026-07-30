@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+ml/.venv/
+.venv/
+venv/
+
+# Env & secrets (keep examples)
+.env
+.env.*
+!.env.example
+!**/.env.example
+deploy/*.env
+!deploy/*.env.example
+deploy/spaceship.env
+deploy/pilot.env
+
+# Runtime ledgers / wallets / live state (never publish)
+data/**
+!data/.gitkeep
+data-pilot/**
+!data-pilot/.gitkeep
+
+# Build / caches
+frontend/dist/
+**/dist/
+tmp/
+test-results/
+*.log
+.DS_Store
+__pycache__/
+**/__pycache__/
+*.pyc
+ml/**/__pycache__/
+ml/**/*.pyc
+
+# Large ML artifacts (code only in OSS)
+*.pt
+*.onnx
+*.parquet
+data/ml/
+
+# Local IDE / agent / deploy metadata
+.cursor/
+.vercel/
+**/.vercel/
+session-ses_*.md
+deno.lock
+
+# Optional local overrides
+*.local.json
+*.local.js
+*.local.ts

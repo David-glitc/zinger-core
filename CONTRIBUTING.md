@@ -1,0 +1,36 @@
+# Contributing
+
+Thanks for helping improve Zinger Core.
+
+## Ground rules
+
+- Prefer **paper mode** when exercising the bot.
+- Never commit `.env`, wallets, proxy credentials, or files under `data/` (except `data/.gitkeep`).
+- Do not paste live keys, chat IDs, or funded addresses into issues or PRs.
+- Keep PRs focused; separate refactors from behavior changes when you can.
+
+## Local setup
+
+```bash
+git clone <this-repo>
+cd Zinger
+npm install
+cd frontend && npm install && npm run build && cd ..
+cp .env.example .env
+# set AUTH_PASSWORD at minimum
+npm start
+# open http://localhost:3000/poly
+```
+
+Optional ML tooling lives under `ml/` (Python). Model weights and parquet datasets are not part of this repo; point `ZINGER_DATA_DIR` / `data/ml` at your own artifacts.
+
+## Checks before opening a PR
+
+- `node --check` on touched JS modules (or run the app smoke in paper mode)
+- Frontend builds if you changed `frontend/`
+- No absolute personal paths (`/home/...`) in new code
+- No secrets in the diff
+
+## Scope of this repo
+
+This is **Core only** (Express bot + operator dashboard + ML training code). The Pilot consumer app and public playground are maintained separately and are out of scope here.

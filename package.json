@@ -1,0 +1,25 @@
+{
+  "name": "zinger-core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "check-settlement": "node scripts/check-settlement.mjs"
+  },
+  "dependencies": {
+    "@polymarket/builder-relayer-client": "^0.0.10",
+    "@polymarket/builder-signing-sdk": "^1.0.0",
+    "@polymarket/clob-client-v2": "^1.1.0",
+    "blessed": "^0.1.81",
+    "dotenv": "^17.4.2",
+    "express": "^5.1.0",
+    "https-proxy-agent": "^9.1.0",
+    "node-telegram-bot-api": "^1.2.0",
+    "onnxruntime-node": "^1.27.0",
+    "openai": "^4.94.0",
+    "socks-proxy-agent": "^10.1.0",
+    "viem": "^2.55.1"
+  },
+  "description": "Polymarket Zinger Core \u2014 paper/live bot and operator dashboard"
+}
