@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "rootDir": ".",
@@ -19,8 +21,22 @@
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["index.ts", "src/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["node_modules", "dist", "frontend", "ml"]
+  "include": [
+    "index.ts",
+    "src/**/*.ts",
+    "scripts/**/*.ts"
+  ],
+  "exclude": [
+    "dist",
+    "frontend",
+    "ml",
+    "node_modules",
+    "tests",
+    "vitest.config.ts",
+    "vitest.perf.config.ts"
+  ]
 }

@@ -32,9 +32,12 @@ Open `http://localhost:3000/poly`, sign in with `AUTH_PASSWORD`, keep mode on **
 |---------|---------|
 | `npm start` | Run Core with `tsx` |
 | `npm run dev` | Watch mode |
+| `npm test` | Unit tests (Vitest) |
+| `npm run test:perf` | Hot-path throughput budgets |
 | `npm run typecheck` | Backend `tsc --noEmit` |
 | `npm run typecheck:frontend` | Frontend `tsc --noEmit` |
 | `npm run build:frontend` | Build operator UI to `frontend/dist` |
+| `npm run ci` | typecheck + unit + perf (local mirror of backend CI) |
 
 ## Configuration
 

@@ -27,10 +27,13 @@ Optional ML tooling lives under `ml/` (Python). Model weights and parquet datase
 ## Checks before opening a PR
 
 - `npm run typecheck` (backend)
+- `npm test` and `npm run test:perf`
 - `npm run typecheck:frontend` if you changed `frontend/`
 - Paper-mode smoke when behavior changes
 - No absolute personal paths (`/home/...`) in new code
 - No secrets in the diff
+
+CI (`.github/workflows/ci.yml`) runs typecheck, unit tests, perf budgets, and frontend typecheck/build on every push/PR to `main`.
 
 ## Scope of this repo
 

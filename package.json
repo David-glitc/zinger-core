@@ -3,14 +3,18 @@
   "version": "1.1.0",
   "private": true,
   "type": "module",
-  "description": "Polymarket Zinger Core \u2014 paper/live bot and operator dashboard (TypeScript)",
+  "description": "Polymarket Zinger Core — paper/live bot and operator dashboard (TypeScript)",
   "scripts": {
     "start": "tsx index.ts",
     "dev": "tsx watch index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.types.json --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "test:perf": "vitest run --config vitest.perf.config.ts",
     "check-settlement": "tsx scripts/check-settlement.ts",
     "build:frontend": "npm --prefix frontend run build",
-    "typecheck:frontend": "npm --prefix frontend run typecheck"
+    "typecheck:frontend": "npm --prefix frontend run typecheck",
+    "ci": "npm run typecheck && npm test && npm run test:perf"
   },
   "engines": {
     "node": ">=20"
@@ -35,6 +39,7 @@
     "@types/node": "^24.3.0",
     "@types/node-telegram-bot-api": "^0.64.10",
     "@types/ws": "^8.18.1",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.7"
   }
 }
