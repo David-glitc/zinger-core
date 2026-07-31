@@ -6,7 +6,7 @@ High-level map of the public Core tree. No hostnames, wallets, or live ledgers.
 
 ```mermaid
 flowchart LR
-  entry[index.js] --> server[src/server.js]
+  entry[index.ts] --> server[src/server.ts]
   server --> poly[src/polymarket]
   server --> tg[src/telegram]
   server --> ui[frontend/dist]

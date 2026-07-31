@@ -20,4 +20,4 @@ COPY --from=frontend /frontend/dist ./frontend/dist
 
 EXPOSE 3000
 
-CMD ["node", "index.js"]
+CMD ["npx", "tsx", "index.ts"]

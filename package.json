@@ -1,17 +1,24 @@
 {
   "name": "zinger-core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
+  "description": "Polymarket Zinger Core \u2014 paper/live bot and operator dashboard (TypeScript)",
   "scripts": {
-    "start": "node index.js",
-    "check-settlement": "node scripts/check-settlement.mjs"
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.types.json --noEmit",
+    "check-settlement": "tsx scripts/check-settlement.ts",
+    "build:frontend": "npm --prefix frontend run build",
+    "typecheck:frontend": "npm --prefix frontend run typecheck"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@polymarket/builder-relayer-client": "^0.0.10",
     "@polymarket/builder-signing-sdk": "^1.0.0",
     "@polymarket/clob-client-v2": "^1.1.0",
-    "blessed": "^0.1.81",
     "dotenv": "^17.4.2",
     "express": "^5.1.0",
     "https-proxy-agent": "^9.1.0",
@@ -19,7 +26,15 @@
     "onnxruntime-node": "^1.27.0",
     "openai": "^4.94.0",
     "socks-proxy-agent": "^10.1.0",
-    "viem": "^2.55.1"
+    "tsx": "^4.20.5",
+    "viem": "^2.55.1",
+    "ws": "^8.18.3"
   },
-  "description": "Polymarket Zinger Core \u2014 paper/live bot and operator dashboard"
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0",
+    "@types/node-telegram-bot-api": "^0.64.10",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.9.2"
+  }
 }

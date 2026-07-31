@@ -2,7 +2,7 @@
 
 Polymarket BTC/ETH up-or-down trading bot with paper and live modes, operator dashboard, optional Telegram command center, and ML helpers.
 
-> This public tree is **Core only**. Runtime ledgers, wallets, and production deploy secrets are not included.
+> This public tree is **Core only** and written in **TypeScript** (Python remains under `ml/`). Runtime ledgers, wallets, and production deploy secrets are not included.
 
 ## Features
 
@@ -15,7 +15,7 @@ Polymarket BTC/ETH up-or-down trading bot with paper and live modes, operator da
 ## Quick start (paper)
 
 ```bash
-git clone <repo-url> zinger-core
+git clone https://github.com/David-glitc/zinger-core.git
 cd zinger-core
 npm install
 cd frontend && npm install && npm run build && cd ..
@@ -25,6 +25,16 @@ npm start
 ```
 
 Open `http://localhost:3000/poly`, sign in with `AUTH_PASSWORD`, keep mode on **paper**.
+
+## Scripts
+
+| Command | Purpose |
+|---------|---------|
+| `npm start` | Run Core with `tsx` |
+| `npm run dev` | Watch mode |
+| `npm run typecheck` | Backend `tsc --noEmit` |
+| `npm run typecheck:frontend` | Frontend `tsc --noEmit` |
+| `npm run build:frontend` | Build operator UI to `frontend/dist` |
 
 ## Configuration
 
@@ -43,10 +53,11 @@ Live trading requires a wallet file created by Core under `data/wallet.json` (gi
 ## Layout
 
 ```
-index.js          # process entry
-src/              # Express API, Polymarket bot, AI, Telegram
-frontend/         # Vite operator dashboard
-ml/               # Training / export scripts (no weights in-git)
+index.ts          # process entry (tsx)
+src/              # Express API, Polymarket bot, AI, Telegram (TypeScript)
+src/types/        # Shared domain types
+frontend/         # Vite + React operator dashboard (TSX)
+ml/               # Training / export scripts (Python; no weights in-git)
 docker/           # Optional container samples
 data/             # Runtime only (gitignored; .gitkeep placeholder)
 ```

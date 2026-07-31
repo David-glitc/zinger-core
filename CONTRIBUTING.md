@@ -12,8 +12,8 @@ Thanks for helping improve Zinger Core.
 ## Local setup
 
 ```bash
-git clone <this-repo>
-cd Zinger
+git clone https://github.com/David-glitc/zinger-core.git
+cd zinger-core
 npm install
 cd frontend && npm install && npm run build && cd ..
 cp .env.example .env
@@ -26,11 +26,19 @@ Optional ML tooling lives under `ml/` (Python). Model weights and parquet datase
 
 ## Checks before opening a PR
 
-- `node --check` on touched JS modules (or run the app smoke in paper mode)
-- Frontend builds if you changed `frontend/`
+- `npm run typecheck` (backend)
+- `npm run typecheck:frontend` if you changed `frontend/`
+- Paper-mode smoke when behavior changes
 - No absolute personal paths (`/home/...`) in new code
 - No secrets in the diff
 
 ## Scope of this repo
 
 This is **Core only** (Express bot + operator dashboard + ML training code). The Pilot consumer app and public playground are maintained separately and are out of scope here.
+
+
+## TypeScript status
+
+Core and the operator UI are TypeScript (`.ts` / `.tsx`), run with `tsx`.
+
+Most migrated modules still carry `// @ts-nocheck` while domain types in `src/types/` are checked under `tsconfig.types.json`. Prefer removing `nocheck` and adding real types when you touch a file.
