@@ -2,6 +2,7 @@
   "name": "zinger-core",
   "version": "1.1.0",
   "private": true,
+  "license": "Apache-2.0",
   "type": "module",
   "description": "Polymarket Zinger Core — paper/live bot and operator dashboard (TypeScript)",
   "scripts": {

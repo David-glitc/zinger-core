@@ -1,0 +1,11 @@
+Zinger Core
+Copyright 2026 Zinger Core contributors
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full license text.
+
+This NOTICE file is provided for attribution under Section 4(d) of the
+Apache License 2.0. It does not modify the License.
+
+Third-party software included in this repository (npm/Python dependencies)
+remains under their respective licenses; see package manifests and lockfiles.
