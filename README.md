@@ -23,7 +23,7 @@ Polymarket BTC/ETH prediction market trading engine featuring high-conviction si
 
 ```bash
 # Clone the repository
-git clone https://github.com/NewGenesis04/zinger-core.git
+git clone https://github.com/David-glitc/zinger-core.git
 cd zinger-core
 
 # Install Node.js backend dependencies and build the UI
@@ -94,27 +94,54 @@ All strategy knobs can be tuned dynamically via the **Config Drawer** on the web
 
 ---
 
-## 🖥️ Production 24/7 VPS Deployment (`tmux` / PM2)
+## 🖥️ Production 24/7 VPS Deployment
 
-To run Zinger Core continuously on a Linux VPS:
+### Option A: Manual Setup via `tmux` (Recommended)
 
 ```bash
-# 1. Connect to your VPS and install Node 22 + tmux
+# 1. Connect to your VPS and install Node 22, Git, tmux & uv
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs git tmux ufw
+curl -LsSf https://astral.sh/uv/install.sh | sh
+sudo apt update && sudo apt install -y nodejs git tmux ufw
 
-# 2. Open dashboard port 3000 on VPS firewall
-sudo ufw allow 3000/tcp
+# 2. Clone repository & install dependencies
+git clone https://github.com/David-glitc/zinger-core.git
+cd zinger-core
+npm install
+npm run build:frontend
+uv sync
 
-# 3. Start Zinger Core inside a persistent tmux session
+# 3. Configure environment & firewall
+cp .env.example .env
+nano .env   # Set your AUTH_PASSWORD=your_secure_password
+sudo ufw allow 3000/tcp   # Open port 3000 on Linux firewall for web dashboard access
+
+# 4. Launch Zinger Core inside a persistent tmux session
 tmux new -s zinger
 npm start
 
-# Detach from tmux (leaves bot running 24/7):
+# Detach from tmux (leaves server running 24/7 in background):
 # Press Ctrl + B, then press D
 ```
 
 To re-attach to your live server screen at any time: `tmux attach -t zinger`.
+
+---
+
+### Option B: Docker Container Deployment
+
+```bash
+# 1. Clone repository
+git clone https://github.com/David-glitc/zinger-core.git
+cd zinger-core
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env and set AUTH_PASSWORD=your_operator_password
+
+# 3. Build & start container in detached background mode
+docker compose -f docker/docker-compose.yml up --build -d
+```
 
 ---
 
