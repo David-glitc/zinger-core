@@ -166,7 +166,15 @@ export async function triggerPythonTrain() {
       return;
     }
     await new Promise((resolve, reject) => {
-      const proc = spawn('python3', [script], {
+      const rootDir = path.resolve(__dirname, '../../..');
+      const rootVenvPy = path.join(rootDir, '.venv/bin/python3');
+      const mlVenvPy = path.join(rootDir, 'ml/.venv/bin/python3');
+      const pyBin = process.env.ZINGER_ML_PYTHON
+        || (fs.existsSync(rootVenvPy) ? rootVenvPy : null)
+        || (fs.existsSync(mlVenvPy) ? mlVenvPy : null)
+        || (fs.existsSync('/usr/bin/python3') ? '/usr/bin/python3' : null)
+        || 'python3';
+      const proc = spawn(pyBin, [script], {
         cwd: path.resolve(__dirname, '../../..'),
         stdio: ['ignore', 'pipe', 'pipe'],
         timeout: 30000,

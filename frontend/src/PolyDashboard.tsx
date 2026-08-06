@@ -534,6 +534,7 @@ function BehaviorForm({
           {numField('arbMaxUsd', 'Arb max $', '1')}
           {numField('governorDrawdownPct', 'Governor breaker %', '0.01')}
           {numField('governorRevertTrades', 'Governor revert trades')}
+          {numField('edgeMinTrades', 'Edge min paper trades')}
         </FieldGroup>
       </FieldSet>
 
@@ -567,6 +568,46 @@ function BehaviorForm({
             <Switch
               checked={draft.governorEnabled !== false}
               onCheckedChange={(governorEnabled) => patch({ governorEnabled })}
+            />
+          </Field>
+          <Field orientation="horizontal">
+            <FieldContent>
+              <FieldTitle>Arb-only until edge</FieldTitle>
+              <FieldDescription>Restrict buys to risk-free arbitrage until paper sample is met</FieldDescription>
+            </FieldContent>
+            <Switch
+              checked={draft.arbOnlyUntilEdge !== false}
+              onCheckedChange={(arbOnlyUntilEdge) => patch({ arbOnlyUntilEdge })}
+            />
+          </Field>
+          <Field orientation="horizontal">
+            <FieldContent>
+              <FieldTitle>Force pure arb</FieldTitle>
+              <FieldDescription>Mute directional trading; execute orderbook arbitrage only</FieldDescription>
+            </FieldContent>
+            <Switch
+              checked={!!draft.forceArbOnly}
+              onCheckedChange={(forceArbOnly) => patch({ forceArbOnly })}
+            />
+          </Field>
+          <Field orientation="horizontal">
+            <FieldContent>
+              <FieldTitle>Eval both sides</FieldTitle>
+              <FieldDescription>Evaluate dual-side betting per window</FieldDescription>
+            </FieldContent>
+            <Switch
+              checked={draft.evalBothSides !== false}
+              onCheckedChange={(evalBothSides) => patch({ evalBothSides })}
+            />
+          </Field>
+          <Field orientation="horizontal">
+            <FieldContent>
+              <FieldTitle>Hold underdogs to settle</FieldTitle>
+              <FieldDescription>Hold underdog contracts to resolution</FieldDescription>
+            </FieldContent>
+            <Switch
+              checked={draft.holdToSettleUnderdogs !== false}
+              onCheckedChange={(holdToSettleUnderdogs) => patch({ holdToSettleUnderdogs })}
             />
           </Field>
           <Field orientation="horizontal">

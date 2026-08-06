@@ -36,9 +36,12 @@ class ZingerSignalDiscriminator:
 
     def _load_models(self):
         """Load all trained LSTM models for this symbol."""
+        sym_clean = self.symbol.replace('/', '_')
+        if sym_clean == 'BTC': sym_clean = 'BTC_USDT'
+        if sym_clean == 'ETH': sym_clean = 'ETH_USDT'
         for timeframe, params in TIMEFRAMES.items():
             for horizon in params['pred_horizons']:
-                label = f'{self.symbol}_{timeframe}_h{horizon}'
+                label = f'{sym_clean}_{timeframe}_h{horizon}'
                 path = os.path.join(MODEL_DIR, f'{label}.pt')
                 if os.path.isfile(path):
                     self.models[f'{timeframe}_h{horizon}'] = {

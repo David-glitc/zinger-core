@@ -3,13 +3,16 @@ import path from 'path';
 import fs from 'fs';
 import { spawn } from 'child_process';
 
-const ML_DIR = path.resolve(import.meta.dirname, '../../ml');
-const ONNX_DIR = path.join(ML_DIR, 'data/ml/models/onnx');
+const ROOT_DIR = path.resolve(import.meta.dirname, '../..');
+const ML_DIR = path.join(ROOT_DIR, 'ml');
+const ONNX_DIR = process.env.ZINGER_ONNX_DIR || path.join(ROOT_DIR, 'data/ml/models/onnx');
 const MANIFEST_PATH = path.join(ONNX_DIR, 'manifest.json');
+const ROOT_VENV_PY = path.join(ROOT_DIR, '.venv/bin/python3');
 const VENV_PY = path.join(ML_DIR, '.venv/bin/python3');
 const PYTHON = process.env.ZINGER_ML_PYTHON
-  || (fs.existsSync('/usr/bin/python3') ? '/usr/bin/python3' : null)
+  || (fs.existsSync(ROOT_VENV_PY) ? ROOT_VENV_PY : null)
   || (fs.existsSync(VENV_PY) ? VENV_PY : null)
+  || (fs.existsSync('/usr/bin/python3') ? '/usr/bin/python3' : null)
   || 'python3';
 
 let _ort = null;

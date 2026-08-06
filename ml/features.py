@@ -98,7 +98,7 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
     # ——— Target encoding (forward returns) ———
     targets = {}
-    for h in [1, 3, 5, 10, 20]:
+    for h in [1, 3, 4, 5, 10, 12, 15, 20, 24]:
         fwd_ret = np.full(n, np.nan)
         if n > h:
             fwd_ret[:n-h] = (close[h:] / close[:n-h]) - 1

@@ -1,86 +1,145 @@
 # Zinger Core
 
-Polymarket BTC/ETH up-or-down trading bot with paper and live modes, operator dashboard, optional Telegram command center, and ML helpers.
+Polymarket BTC/ETH prediction market trading engine featuring high-conviction signal execution, multi-horizon ONNX deep learning overlays, an operator dashboard, and an automated regime governor.
 
-> This public tree is **Core only** and written in **TypeScript** (Python remains under `ml/`). Runtime ledgers, wallets, and production deploy secrets are not included.
+> This public repository contains **Zinger Core** written in **TypeScript** (Python machine learning models under `ml/`). Runtime ledgers, private keys, and live credentials are not checked into Git.
 
-## Features
+---
 
-- Paper and live Polymarket CLOB trading (5m / 15m / 30m / 1h windows when listed)
-- Signal + optional ML overlays, Kelly/certainty sizing, TP/SL / hold-to-settle plans
-- Regime governor and LLM optimizer hooks (OpenRouter)
-- Operator UI (`frontend/`) served from Core at `/poly`
-- Optional Telegram control surface
+## ⚡ Features
 
-## Quick start (paper)
+- **Polymarket Binary Options**: Automated paper and live trading across 5m, 15m, 30m, and 1h windows.
+- **Multi-Horizon BiLSTM ONNX Models**: Native in-process Node.js inference (`< 2ms` latency) evaluating 17 deep learning networks.
+- **Fractional Kelly Position Sizing**: Probability-scaled bet sizing with risk-reward ratio adjustments.
+- **Asymmetric Sweet-Spot Banding**: Configurable price filters ($0.44–$0.62) maximizing win ROI while capping stop-loss exposure.
+- **Operator Dashboard UI**: React + Vite control panel served natively at `/poly`.
+- **Automated Circuit Breaker**: Regime governor & LLM optimizer hooks for automated drawdown management.
+
+---
+
+## 🚀 Quick Start (Paper Trading)
+
+### 1. Prerequisites & Installation
 
 ```bash
-git clone https://github.com/David-glitc/zinger-core.git
+# Clone the repository
+git clone https://github.com/NewGenesis04/zinger-core.git
 cd zinger-core
+
+# Install Node.js backend dependencies and build the UI
 npm install
-cd frontend && npm install && npm run build && cd ..
+npm run build:frontend
+
+# Setup environment file
 cp .env.example .env
-# set AUTH_PASSWORD=...
+# Edit .env and set AUTH_PASSWORD=your_secure_password
+```
+
+### 2. Machine Learning Environment (Optional ML Overlay)
+
+Zinger Core automatically detects and prioritizes Python virtual environments (`.venv` or `ml/.venv`).
+
+```bash
+# Install uv (fast Python package manager) if not installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies using root pyproject.toml
+uv sync
+
+# Train LSTM models & export ONNX files
+python ml/pipeline.py all
+```
+
+### 3. Launch Zinger Core
+
+```bash
 npm start
 ```
 
-Open `http://localhost:3000/poly`, sign in with `AUTH_PASSWORD`, keep mode on **paper**.
+Open **`http://localhost:3000/poly`** in your browser, sign in with your `AUTH_PASSWORD`, and keep mode on **paper**.
 
-## Scripts
+---
 
-| Command | Purpose |
-|---------|---------|
-| `npm start` | Run Core with `tsx` |
-| `npm run dev` | Watch mode |
-| `npm test` | Unit tests (Vitest) |
-| `npm run test:perf` | Hot-path throughput budgets |
-| `npm run typecheck` | Backend `tsc --noEmit` |
-| `npm run typecheck:frontend` | Frontend `tsc --noEmit` |
-| `npm run build:frontend` | Build operator UI to `frontend/dist` |
-| `npm run ci` | typecheck + unit + perf (local mirror of backend CI) |
+## 🛠️ Machine Learning & ONNX Pipeline
 
-## Configuration
-
-See [`.env.example`](.env.example). Important knobs:
-
-| Variable | Purpose |
-|----------|---------|
-| `AUTH_PASSWORD` | Dashboard login |
-| `OPENROUTER_API_KEY` | Optional LLM governor/optimizer |
-| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Optional Telegram |
-| `CLOB_PROXY_URL` | Optional SOCKS/HTTP egress for order writes |
-| `ZINGER_DATA_DIR` | Override runtime data directory (default `./data`) |
-
-Live trading requires a wallet file created by Core under `data/wallet.json` (gitignored) and Polymarket-ready collateral. Start paper-first.
-
-## Layout
-
-```
-index.ts          # process entry (tsx)
-src/              # Express API, Polymarket bot, AI, Telegram (TypeScript)
-src/types/        # Shared domain types
-frontend/         # Vite + React operator dashboard (TSX)
-ml/               # Training / export scripts (Python; no weights in-git)
-docker/           # Optional container samples
-data/             # Runtime only (gitignored; .gitkeep placeholder)
-```
-
-## Docker
+Zinger Core uses an offline-trained PyTorch BiLSTM architecture that exports directly to ONNX format for zero-latency execution in Node.js.
 
 ```bash
-cp .env.example .env
-# fill OPENROUTER_API_KEY / AUTH_PASSWORD as needed
-docker compose -f docker/docker-compose.yml up --build
+# Fetch historical data, compute TA features, train models, and export ONNX models
+python ml/pipeline.py all
+
+# Alternatively, run standalone ONNX export on saved PyTorch checkpoints
+python ml/export_onnx.py
 ```
 
-## Security
+Exported ONNX models and `manifest.json` are placed in `data/ml/models/onnx/`. Zinger Core automatically detects `manifest.json` and activates the **Phase 2 ONNX ML Overlay** in real-time.
 
-Read [SECURITY.md](SECURITY.md). Never publish funded keys or live `.env` files.
+---
 
-## Contributing
+## 🎛️ Operator Dashboard & Strategy Controls
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+All strategy knobs can be tuned dynamically via the **Config Drawer** on the web UI (`http://localhost:3000/poly` -> **Config ⚙️**):
 
-## License
+| Parameter | Recommended | Purpose |
+| :--- | :---: | :--- |
+| `minConfidence` | `0.50` – `0.55` | Conviction threshold. Bypasses 30%–40% indicator noise during market chop. |
+| `minPrice` / `maxPrice` | `0.44` / `0.62` | Asymmetric sweet-spot price band. Avoids buying expensive favorites (> $0.65) or deep underdogs (< $0.40). |
+| `tpPctLow` / `tpPctHigh` | `10%` / `22%` | Mid-window Take Profit targets to lock in rapid price spikes. |
+| `slPct` | `8%` | Hard Stop Loss percentage per contract ticket. |
+| `adaptiveSl` | `true` | Dynamically tightens stop loss down to ~5% if trade is negative and momentum fades. |
+| `evalBothSides` | `false` | When `false`, forces single-sided conviction trades per window (disables double-sided hedging). |
+| `arbOnlyUntilEdge` | `false` | When `false`, unlocks immediate directional buys without requiring 40 paper trades. |
+| `edgeMinTrades` | `0` | Paper warmup trade requirement before unlocking directional trades. |
+| `governorEnabled` | `false` *(testing)* | When `false`, locks your manual strategy config without automatic gear-switching. |
+
+---
+
+## 🖥️ Production 24/7 VPS Deployment (`tmux` / PM2)
+
+To run Zinger Core continuously on a Linux VPS:
+
+```bash
+# 1. Connect to your VPS and install Node 22 + tmux
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs git tmux ufw
+
+# 2. Open dashboard port 3000 on VPS firewall
+sudo ufw allow 3000/tcp
+
+# 3. Start Zinger Core inside a persistent tmux session
+tmux new -s zinger
+npm start
+
+# Detach from tmux (leaves bot running 24/7):
+# Press Ctrl + B, then press D
+```
+
+To re-attach to your live server screen at any time: `tmux attach -t zinger`.
+
+---
+
+## 📋 Available Scripts
+
+| Command | Purpose |
+| :--- | :--- |
+| `npm start` | Run Zinger Core backend with `tsx` |
+| `npm run dev` | Watch mode for development |
+| `npm test` | Run backend Vitest unit tests |
+| `npm run typecheck` | Backend TypeScript verification (`tsc --noEmit`) |
+| `npm run typecheck:frontend` | Frontend TypeScript verification (`tsc --noEmit`) |
+| `npm run build:frontend` | Compile Vite dashboard to `frontend/dist` |
+| `npm run ci` | Run full CI suite (typecheck + unit + perf) |
+
+---
+
+## 🔐 Security & Safety
+
+- **Paper Mode Default**: Always validate strategy setups in paper mode before live execution.
+- **API Password Protection**: All `/api/*` endpoints require `AUTH_PASSWORD` session authentication.
+- **Private Key Isolation**: Live wallet keys (`data/wallet.json`) and `.env` credentials are gitignored. Read [SECURITY.md](SECURITY.md) before live deployment.
+
+---
+
+## 📄 License
 
 Licensed under the [Apache License, Version 2.0](LICENSE). See [NOTICE](NOTICE).

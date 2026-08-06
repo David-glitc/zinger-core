@@ -78,6 +78,12 @@ def test_inference():
     print(f'\nEnsemble signal: {json.dumps(ensemble, indent=2)}')
 
 
+def export_onnx():
+    step('Step 3: Exporting ONNX models for Node.js runtime')
+    from export_onnx import main as export_main
+    export_main()
+
+
 def main():
     os.makedirs(MODEL_DIR, exist_ok=True)
     start = time.time()
@@ -88,6 +94,8 @@ def main():
         train_lstm()
     elif phases == 'rl':
         train_rl()
+    elif phases == 'onnx':
+        export_onnx()
     elif phases == 'verify':
         verify_models()
     elif phases == 'test':
@@ -95,10 +103,11 @@ def main():
     elif phases == 'all':
         train_lstm()
         train_rl()
+        export_onnx()
         verify_models()
         test_inference()
     else:
-        print(f'Usage: python pipeline.py [lstm|rl|verify|test|all]')
+        print(f'Usage: python pipeline.py [lstm|rl|onnx|verify|test|all]')
 
     elapsed = time.time() - start
     print(f'\nTotal time: {elapsed/60:.1f} min')

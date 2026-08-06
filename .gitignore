@@ -51,3 +51,5 @@ deno.lock
 *.local.json
 *.local.js
 *.local.ts
+ZINGER_STRATEGY_NOTES.md
+
