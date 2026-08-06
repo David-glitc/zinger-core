@@ -169,7 +169,7 @@ export async function triggerPythonTrain() {
       const rootDir = path.resolve(__dirname, '../../..');
       const rootVenvPy = path.join(rootDir, '.venv/bin/python3');
       const mlVenvPy = path.join(rootDir, 'ml/.venv/bin/python3');
-      const pyBin = process.env.ZINGER_ML_PYTHON
+      const pyBin = (process.env.ZINGER_ML_PYTHON && fs.existsSync(process.env.ZINGER_ML_PYTHON) ? process.env.ZINGER_ML_PYTHON : null)
         || (fs.existsSync(rootVenvPy) ? rootVenvPy : null)
         || (fs.existsSync(mlVenvPy) ? mlVenvPy : null)
         || (fs.existsSync('/usr/bin/python3') ? '/usr/bin/python3' : null)

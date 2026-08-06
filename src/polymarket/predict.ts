@@ -8,7 +8,7 @@ const ROOT_DIR = path.resolve(import.meta.dirname, '../..');
 const ROOT_VENV_PY = path.join(ROOT_DIR, '.venv/bin/python3');
 const ML_DIR = path.join(ROOT_DIR, 'ml');
 const VENV_PY = path.join(ML_DIR, '.venv/bin/python3');
-const PYTHON = process.env.ZINGER_ML_PYTHON
+const PYTHON = (process.env.ZINGER_ML_PYTHON && fs.existsSync(process.env.ZINGER_ML_PYTHON) ? process.env.ZINGER_ML_PYTHON : null)
   || (fs.existsSync(ROOT_VENV_PY) ? ROOT_VENV_PY : null)
   || (fs.existsSync(VENV_PY) ? VENV_PY : null)
   || (fs.existsSync('/usr/bin/python3') ? '/usr/bin/python3' : null)
