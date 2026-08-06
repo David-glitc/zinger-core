@@ -1,0 +1,8 @@
+numpy
+pandas
+pyarrow
+torch
+ccxt
+onnx
+onnxruntime
+onnxscript

@@ -83,7 +83,7 @@ def export_model(pt_path):
     size_kb = round(os.path.getsize(onnx_path) / 1024)
     print(f'  OK: {onnx_path} ({size_kb} KB, feat_dim={feat_dim}, meta_dim={meta_dim})')
     return {'symbol': symbol, 'timeframe': timeframe, 'horizon': horizon,
-            'path': onnx_path, 'file': f'{safe}.onnx'}
+            'path': f'{safe}.onnx', 'file': f'{safe}.onnx'}
 
 
 def main():

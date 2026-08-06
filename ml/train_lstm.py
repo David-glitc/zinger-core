@@ -97,22 +97,35 @@ def validate(model, loader, device):
     return total_loss / max(n_batches, 1), acc
 
 
-def train():
+def train(force_retrain=False):
+    import sys
+    if '--force' in sys.argv or '-f' in sys.argv:
+        force_retrain = True
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f'Device: {device}')
+    print(f'Device: {device} | Force re-train: {force_retrain}')
     os.makedirs(MODEL_DIR, exist_ok=True)
 
     print('Fetching data (use cache if available)...')
     data = fetch_all(force_refetch=False)
     print(f'Data loaded: {list(data.keys())}')
 
+    total_models = len(SYMBOLS) * len(TIMEFRAMES) * sum(len(p['pred_horizons']) for p in TIMEFRAMES.values())
+    curr = 0
+
     for symbol in SYMBOLS:
         for timeframe, params in TIMEFRAMES.items():
             for horizon in params['pred_horizons']:
+                curr += 1
                 seq_len = params['seq_len']
-                label = f'{symbol}_{timeframe}_h{horizon}'
+                label = f'{symbol}_{timeframe}_h{horizon}'.replace('/', '_')
+                save_path = os.path.join(MODEL_DIR, f'{label}.pt')
                 print(f'\n{"="*60}')
-                print(f'Training: {label} (seq={seq_len}, horizon={horizon})')
+                print(f'[{curr}/{total_models}] Processing: {label} (seq={seq_len}, horizon={horizon})')
+
+                if os.path.exists(save_path) and not force_retrain:
+                    print(f'  ✓ SKIP — {label}.pt already trained & saved (pass --force to re-train)')
+                    continue
 
                 feats, meta, targets_df, target_col = prepare_data(symbol, timeframe, data, horizon, seq_len)
                 if feats is None or targets_df is None:
@@ -122,16 +135,17 @@ def train():
                 feat_dim = feats.shape[1]
                 meta_dim = meta.shape[1]
 
-                # Train/val split (chronological)
+                # Train/val split (chronological with seq_len overlap for validation)
                 split_idx = int(len(feats) * 0.85)
+                val_start = max(0, split_idx - seq_len)
                 train_feats = feats.iloc[:split_idx]
                 train_meta = meta.iloc[:split_idx]
-                val_feats = feats.iloc[split_idx:]
-                val_meta = meta.iloc[split_idx:]
+                val_feats = feats.iloc[val_start:]
+                val_meta = meta.iloc[val_start:]
 
                 # Targets from separate DF
                 train_targets = targets_df.iloc[:split_idx]
-                val_targets = targets_df.iloc[split_idx:]
+                val_targets = targets_df.iloc[val_start:]
 
                 train_loader, n_train = build_dataloader(
                     train_feats, train_meta, target_col, seq_len, horizon, shuffle=True, targets_df=train_targets,
