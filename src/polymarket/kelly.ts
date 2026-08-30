@@ -44,8 +44,11 @@ export function computeKellySize({
   maxUsd,
   kellyFraction = 0.25,
   maxPositionPct = 0.4,
+  realizedVol,
+  calmBaseline,
 }) {
   const stats = getKellyStats();
+  const volTilt = resolveIdioVolTilt({ realizedVol, calmBaseline });
 
   if (!stats || tradeCount < 10) {
     const cappedConf = Math.min(0.65, Number(signalConfidence || 0));
@@ -74,13 +77,15 @@ export function computeKellySize({
   const sizedByBankroll = bankroll * betPct;
   const cappedConf = Math.min(0.65, Number(signalConfidence || 0));
   const sizedBySignal = sizedByBankroll * (0.35 + cappedConf * 0.5);
-  const finalSize = Math.max(minUsd, Math.min(sizedBySignal, maxUsd, bankroll * maxPositionPct));
+  const volScaled = sizedBySignal * volTilt.volScale;
+  const finalSize = Math.max(minUsd, Math.min(volScaled, maxUsd, bankroll * maxPositionPct));
 
   return {
     sizeUsd: Math.round(finalSize * 100) / 100,
     kellyFraction: Math.round(betPct * 10000) / 100,
     kellyRaw: stats.kelly,
     method: 'kelly',
+    volTilt,
     ...stats,
   };
 }
@@ -113,6 +118,8 @@ export function computeCertaintyKelly({
   minUsd = 0.4,
   maxUsd,
   maxPct = 0.35,
+  realizedVol,
+  calmBaseline,
 }) {
   const entry = Number(price);
   const rem = Number(remaining);
@@ -129,20 +136,52 @@ export function computeCertaintyKelly({
 
   const kellyRaw = edge / (1 - entry);
   const betPct = Math.max(0, Math.min(Number(maxPct) || 0.35, kellyRaw * kellyFraction));
-  const capUsd = Math.max(minUsd, Math.min(maxUsd ?? bank * betPct, bank * (Number(maxPct) || 0.35)));
-  const sizeUsd = Math.round(Math.max(0, Math.min(bank * betPct, capUsd)) * 100) / 100;
+  const volTilt = resolveIdioVolTilt({ realizedVol, calmBaseline });
+  const betPctTilted = betPct * volTilt.volScale;
+  const capUsd = Math.max(minUsd, Math.min(maxUsd ?? bank * betPctTilted, bank * (Number(maxPct) || 0.35)));
+  const sizeUsd = Math.round(Math.max(0, Math.min(bank * betPctTilted, capUsd)) * 100) / 100;
   if (!(sizeUsd > 0)) return null;
 
   return {
     sizeUsd,
     kellyRaw: Math.round(kellyRaw * 1000) / 1000,
-    betPct: Math.round(betPct * 10000) / 100,
+    betPct: Math.round(betPctTilted * 10000) / 100,
     q: Math.round(q * 1000) / 1000,
     edge: Math.round(edge * 1000) / 1000,
     settleWeight: Math.round(settleWeight * 100) / 100,
     remaining: rem,
     method: 'certainty_kelly',
+    volTilt,
   };
+}
+
+/**
+ * Realized idiosyncratic-volatility tilt (low-vol anomaly guardrail, after
+ * Ang–Hodrick–Xing–Zhang 2006): high-idio-vol markets tend to earn the least.
+ * Rather than short them, we de-risk — shrink the Kelly fraction toward zero as
+ * realized vol climbs above a calm baseline, so we never "chase" high-vol chop.
+ *
+ * volScale is in [volFloor..1]; multiply the effective kelly fraction by it.
+ * Pass per-asset realized vol (e.g. ATR% or rolling downside deviation) and an
+ * optional baseline (calm vol). Returns { which probe }.
+ */
+export function resolveIdioVolTilt({
+  realizedVol,
+  calmBaseline,
+  volFloor = 0.35,
+  knee = 2.0,
+} = {}) {
+  const rv = Number(realizedVol);
+  const base = Number(calmBaseline);
+  if (!(rv > 0)) return { volScale: 1, method: 'no_vol', realizedVol: rv, calmBaseline: base };
+  if (!(base > 0)) {
+    // No baseline yet: fall back to an absolute de-risk as rv gets extreme.
+    const s = rv >= 1.5 ? volFloor : rv >= 0.8 ? 0.6 : 1;
+    return { volScale: s, method: 'vol_absolute', realizedVol: rv, calmBaseline: base };
+  }
+  const ratio = rv / base;
+  const volScale = Math.max(volFloor, Math.min(1, Math.exp(-(ratio - 1) / knee)));
+  return { volScale, method: 'vol_ratio', realizedVol: rv, calmBaseline: base, ratio };
 }
 
 export function resolveDynamicLimits(cfg, bankroll) {

@@ -2092,6 +2092,16 @@ export async function scan() {
       const depth = (cfg.useOrderBookBias !== false || hasOpenHere)
         ? await getDepthForMarket(market).catch(() => null)
         : null;
+      const sym = String(market.symbol).toLowerCase();
+      if (depth && ['btc', 'eth'].includes(sym)) {
+        botState.booksForFusion = botState.booksForFusion || {};
+        botState.booksForFusion[sym] = {
+          bestBid: depth.up?.bestBid ?? depth.down?.bestBid ?? null,
+          bestAsk: depth.up?.bestAsk ?? depth.down?.bestAsk ?? null,
+          imbalance: (depth.up?.imbalance ?? depth.down?.imbalance) ?? null,
+          spreadPct: (depth.up?.spreadPct ?? depth.down?.spreadPct) ?? null,
+        };
+      }
       const remainingMs = market.endTime
         ? Math.max(0, market.endTime * 1000 - Date.now())
         : getRemainingMs();

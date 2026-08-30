@@ -2,6 +2,39 @@
 const BINANCE = 'https://api.binance.com';
 const BINANCE_FUTURES = 'https://fapi.binance.com';
 
+import { applyAlphaFusion } from './alphaFusion.js';
+import { loadRegimeSignal } from './regimeSignal.js';
+
+/**
+ * Pull jump-model regime + idio-vol context from the shared store (see
+ * `regimeSignal.ts`, the single owner of that reading) so the alpha fusion can
+ * de-risk during high-vol regimes. Called by the bot each scan.
+ * Falls back silently — fusion still works with base TA alone.
+ */
+export async function loadFusionContext() {
+  try {
+    const raw = loadRegimeSignal();
+    if (raw) {
+      const regime = raw.regime === 'high-vol' ? 'highvol'
+        : raw.regime === 'trend' ? 'trend' : 'chop';
+      const btc = { regime, regimeSignal: { highVol: raw.highVol, realizedVol: raw.realizedVol, calmBaseline: raw.calmBaseline } };
+      const eth = { ...btc };
+      globalThis.__zingerFusionCtx = { btc, eth };
+      return { btc, eth };
+    }
+  } catch {}
+  return null;
+}
+
+export function refreshFusionContext(partialCtx) {
+  if (!partialCtx || typeof partialCtx !== 'object') return;
+  const prev = globalThis.__zingerFusionCtx || {};
+  globalThis.__zingerFusionCtx = {
+    btc: { ...(prev.btc || {}), ...(partialCtx.btc || {}) },
+    eth: { ...(prev.eth || {}), ...(partialCtx.eth || {}) },
+  };
+}
+
 export async function fetchCandles(symbol = 'BTCUSDT', interval = '1m', limit = 200) {
   const url = `${BINANCE}/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
@@ -243,7 +276,8 @@ export async function getSignal(asset = 'BTC', extras = {}) {
     fetchFunding(symbol),
   ]);
   if (!candles) return null;
-  return analyze(candles, { ...extras, funding });
+  const analysis = analyze(candles, { ...extras, funding });
+  return applyAlphaFusion(analysis, extras.fusionCtx || {});
 }
 
 export async function getSignalForBoth() {
@@ -253,13 +287,23 @@ export async function getSignalForBoth() {
     fetchFunding('BTCUSDT'),
     fetchFunding('ETHUSDT'),
   ]);
-  const btc = btcCandles ? analyze(btcCandles, { funding: btcFund }) : null;
-  const eth = ethCandles
+  const btcCandlesRaw = btcCandles ? analyze(btcCandles, { funding: btcFund }) : null;
+  const ethCandlesRaw = ethCandles
     ? analyze(ethCandles, {
       funding: ethFund,
-      leadMom1: btc?.momentum?.m1 ?? null,
+      leadMom1: btcCandlesRaw?.momentum?.m1 ?? null,
     })
     : null;
+  const fusionCtx = globalThis.__zingerFusionCtx || {};
+  const btc = applyAlphaFusion(btcCandlesRaw, {
+    ...(fusionCtx.btc || {}),
+    isEth: false,
+  });
+  const eth = applyAlphaFusion(ethCandlesRaw, {
+    ...(fusionCtx.eth || {}),
+    leadMom1: btcCandlesRaw?.momentum?.m1 ?? null,
+    isEth: true,
+  });
   return { btc, eth };
 }
 

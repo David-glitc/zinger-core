@@ -16,6 +16,7 @@
     "build:frontend": "npm --prefix frontend run build",
     "typecheck:frontend": "npm --prefix frontend run typecheck",
     "dry-run": "tsx scripts/dry-run.ts",
+    "paper-test": "tsx scripts/paper-test.ts",
     "ci": "npm run typecheck && npm test && npm run test:perf"
   },
   "engines": {

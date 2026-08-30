@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { POLY_WINDOW_SECONDS } from '../config.js';
+import { loadFusionContext, refreshFusionContext } from '../signal.js';
 
 export async function fetchSpotTicker(symbol: string) {
   try {
@@ -50,6 +51,14 @@ export async function collectSignals({
   log,
 }) {
   if (!cfg?.useSignals) return botState.signals || {};
+
+  // Alpha fusion context must be in place before the signals are analyzed:
+  // the jump-model regime comes off disk, the book imbalance from last pass.
+  await loadFusionContext();
+  refreshFusionContext({
+    btc: { book: botState.booksForFusion?.btc || null },
+    eth: { book: botState.booksForFusion?.eth || null },
+  });
 
   // Outage-resilient: network timeouts must not abort scan pass
   const freshSignals = typeof getSignalForBoth === 'function'

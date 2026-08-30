@@ -15,6 +15,7 @@
 import { chat, llmStatus } from './llm.js';
 import { loadFileOrStore, saveFileOrStore } from '../polymarket/sqliteStore.js';
 import { dataPath } from '../polymarket/dataDir.js';
+import { loadRegimeSignal } from '../polymarket/regimeSignal.js';
 
 const GOV_FILE = dataPath('governor_state.json');
 
@@ -219,6 +220,41 @@ export function detectRegime({ signals = {} } = {}) {
   return { regime, avgAdx: round(avgAdx, 1), maxAtr: round(maxAtr), trending, reasons };
 }
 
+/**
+ * Optional overlay on the heuristic, from the statistical jump model
+ * (`ml/regime_emit.py`, read through the shared store when fresh).
+ *
+ * The model is fit with `n_states=2`, so it only ever answers one question:
+ * is realized volatility high or not. That is a risk-on/risk-off axis, and it
+ * is the *only* axis it is allowed to drive here:
+ *
+ *   high-vol → force `arb-only`. Volatility is exactly what should pull us out
+ *              of directional exposure, and the model is slower and steadier
+ *              about it than a single ATR reading.
+ *   calm     → no opinion. Trend-versus-chop is ADX's call, so the heuristic's
+ *              own choice of `trend-ride` or `scalp` stands untouched.
+ *
+ * Returning `arb-only` for high-vol and `null` for calm is what keeps all three
+ * profiles reachable. An earlier version mapped calm → `trend-ride`, which made
+ * `scalp` unreachable whenever a fresh signal existed: a two-state model cannot
+ * name a third regime, and it should not be asked to.
+ *
+ * A calm reading still returns its reasons, so the decision log shows the model
+ * was consulted and deferred rather than being absent.
+ *
+ * @returns {{regime: string|null, reasons: string[], source: string}|null}
+ */
+export function detectRegimeFromModel() {
+  // Location and staleness both belong to regimeSignal.ts, so the governor and
+  // the alpha fusion can never disagree about which reading is live.
+  const disk = loadRegimeSignal();
+  if (!disk) return null;
+  if (disk.regime === 'high-vol') {
+    return { regime: 'arb-only', reasons: [`ML jump-model: high-vol regime (flips=${disk.flips}, rv=${round(disk.realizedVol, 4)})`], source: 'jump-model' };
+  }
+  return { regime: null, reasons: [`ML jump-model: calm (rv=${round(disk.realizedVol, 4)}, base=${round(disk.calmBaseline, 4)}) — deferring trend/chop to ADX`], source: 'jump-model' };
+}
+
 /** Apply a profile overlay via saveConfig; returns true only if something changed. */
 function applyProfile(name, { saveConfig, config }) {
   const overlay = REGIME_PROFILES[name];
@@ -336,7 +372,18 @@ export async function runGovernor({
 
     const closed = (trades || []).filter((t) => (t.closed || t.exitReason) && (t.mode || mode) === mode);
     const perf = { equity, netPnl: Number(portfolio.netPnl ?? 0) };
-    const detected = detectRegime({ signals });
+    let detected = detectRegime({ signals });
+    const modelDetected = detectRegimeFromModel();
+    if (modelDetected) {
+      // The model only overrides when it has an opinion (high-vol). On a calm
+      // reading `regime` is null and the heuristic's trend-ride/scalp call stands.
+      detected = {
+        ...detected,
+        ...(modelDetected.regime ? { regime: modelDetected.regime } : {}),
+        reasons: [...modelDetected.reasons, ...detected.reasons],
+        source: modelDetected.source,
+      };
+    }
 
     // --- Drawdown circuit-breaker (overrides everything) ---
     const breakerPct = Number(config.governorDrawdownPct ?? DEFAULTS.drawdownBreakerPct);
